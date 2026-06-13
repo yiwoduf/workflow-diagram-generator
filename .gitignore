@@ -20,3 +20,12 @@ npm-debug.log*
 .idea
 .DS_Store
 Thumbs.db
+
+# Personal diagrams stay local — only the bundled examples are tracked.
+# The engine still auto-discovers ignored specs locally; they just aren't committed.
+# To share one, add a matching `!diagrams/<name>.js` whitelist line below.
+diagrams/*.js
+!diagrams/openclaw-job-search-pipeline.js
+!diagrams/rag-chat-architecture.js
+diagrams/_archive/*
+!diagrams/_archive/.gitkeep

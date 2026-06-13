@@ -7,7 +7,7 @@
 // sampled phase. This makes GIF recording ~30x faster and frame-perfect.
 import GIF from 'gif.js'
 import html2canvas from 'html2canvas'
-import { SIZE, BG, FLOW_PERIOD, GIF_FRAMES, GIF_QUALITY } from './constants.js'
+import { SIZE, GIF_SIZE, BG, FLOW_PERIOD, GIF_FRAMES, GIF_QUALITY } from './constants.js'
 
 /** Capture the static diagram (no flow dots) at full resolution. */
 async function captureBase(frame, flow) {
@@ -39,20 +39,25 @@ async function captureBase(frame, flow) {
   }
 }
 
-/** Compose one frame: static base + glowing flow dots at the given positions. */
-function composeFrame(base, dotStates) {
+/**
+ * Compose one frame at `outSize`: static base (downscaled if needed) + glowing
+ * flow dots. Dot positions come in SIZE-space and are scaled to the output.
+ */
+function composeFrame(base, dotStates, outSize) {
+  const s = outSize / SIZE
   const canvas = document.createElement('canvas')
-  canvas.width = SIZE
-  canvas.height = SIZE
+  canvas.width = outSize
+  canvas.height = outSize
   const ctx = canvas.getContext('2d')
-  ctx.drawImage(base, 0, 0)
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(base, 0, 0, outSize, outSize)
   for (const d of dotStates) {
     ctx.save()
     ctx.shadowColor = d.color
-    ctx.shadowBlur = 10
+    ctx.shadowBlur = 10 * s
     ctx.fillStyle = d.color
     ctx.beginPath()
-    ctx.arc(d.x, d.y, 6.5, 0, Math.PI * 2)
+    ctx.arc(d.x * s, d.y * s, 6.5 * s, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
   }
@@ -73,7 +78,7 @@ function download(href, filename) {
 export async function exportPNG(frame, flow, slug, onStatus) {
   onStatus('rendering…')
   const base = await captureBase(frame, flow)
-  const canvas = composeFrame(base, flow.sample(flow.phase))
+  const canvas = composeFrame(base, flow.sample(flow.phase), SIZE)
   download(canvas.toDataURL('image/png'), `${slug}.png`)
   onStatus('PNG saved ✓')
 }
@@ -92,13 +97,13 @@ export async function recordGIF(frame, flow, slug, onStatus) {
     const gif = new GIF({
       workers,
       quality: GIF_QUALITY,
-      width: SIZE,
-      height: SIZE,
+      width: GIF_SIZE,
+      height: GIF_SIZE,
       // Resolve against the deploy base so it works under a non-root base path.
       workerScript: import.meta.env.BASE_URL + 'gif.worker.js',
     })
     for (let i = 0; i < GIF_FRAMES; i++) {
-      gif.addFrame(composeFrame(base, flow.sample(i / GIF_FRAMES)), { delay })
+      gif.addFrame(composeFrame(base, flow.sample(i / GIF_FRAMES), GIF_SIZE), { delay })
       onStatus(`composing ${i + 1}/${GIF_FRAMES}…`)
     }
     await new Promise((resolve, reject) => {

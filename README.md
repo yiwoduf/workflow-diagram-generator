@@ -100,7 +100,9 @@ scripts/
   screenshot.mjs       headless frame screenshot for the verification loop
 ```
 
-**Export pipeline.** html2canvas cannot capture CSS animations, and a 1500×1500 DOM capture costs ~0.5–1s. So the exporter hides the dot layer, captures the static frame **once**, then composes each GIF frame natively (base bitmap + glowing dots sampled along the wire paths at `i/30` phase). One capture instead of thirty — recording a full GIF takes seconds, and the loop is mathematically seamless.
+**Export pipeline.** html2canvas cannot capture CSS animations, and a 1500×1500 DOM capture costs ~0.5–1s. So the exporter hides the dot layer, captures the static frame **once**, then composes each GIF frame natively (base bitmap + glowing dots sampled along the wire paths at `i/30` phase). One capture instead of thirty — recording a full GIF takes seconds, and the loop is mathematically seamless. PNG exports at full 1500²; the GIF is downscaled to `GIF_SIZE` (default 900) since GIF's 256-color/LZW format makes file size scale with pixel count — all tunable in `src/engine/constants.js`.
+
+**Your own diagrams stay local.** `diagrams/*.js` is gitignored except the two bundled examples, so specs you author aren't committed unless you opt in by whitelisting them in `.gitignore`.
 
 ## Tech
 

@@ -27,6 +27,11 @@ scripts/screenshot.mjs ← headless verification (npm run shot).
 **Every `diagrams/*.js` file is auto-discovered** and appears in the in-app
 selector — no imports to edit. Files in subfolders (`_archive/`) are ignored.
 
+**Git: personal diagrams stay local.** `diagrams/*.js` is gitignored except the
+two bundled examples (`.gitignore` whitelists them). New specs you author work
+locally but are NOT committed by default — that's intentional. To share one
+publicly, add a `!diagrams/<name>.js` line to `.gitignore`.
+
 ### Workflow when the user requests a new or updated diagram
 
 1. If replacing an existing diagram, copy the current spec into
@@ -144,9 +149,14 @@ To add a brand logo (use one not already registered):
 
 ## Export behavior (already wired)
 
-- **Download PNG** → `<slug>.png`, 1500×1500.
-- **Record GIF** → `<slug>.gif`, seamless 30-frame loop of the flow dots.
-  The GIF pipeline captures the static frame once and composes dots natively
-  per frame — only `dots` wires animate. CSS animations do NOT appear in
-  exports (html2canvas renders static styles), so anything that must move in
-  the GIF needs a `dots` wire.
+- **Download PNG** → `<slug>.png`, full 1500×1500.
+- **Record GIF** → `<slug>.gif`, seamless 30-frame loop of the flow dots,
+  downscaled to `GIF_SIZE` (default 900) to keep the file small. The GIF
+  pipeline captures the static frame once and composes dots natively per frame
+  — only `dots` wires animate. CSS animations do NOT appear in exports
+  (html2canvas renders static styles), so anything that must move in the GIF
+  needs a `dots` wire.
+- GIF size knobs live in `src/engine/constants.js`: `GIF_SIZE` (resolution —
+  the biggest lever, file size scales with its square), `GIF_FRAMES` (smoothness
+  vs size), `GIF_QUALITY`. For extra-small output, post-process offline with
+  `gifsicle -O3 --lossy` or export to WebM/MP4 instead.
