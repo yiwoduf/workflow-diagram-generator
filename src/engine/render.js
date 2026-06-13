@@ -3,7 +3,7 @@
 import { SIZE } from './constants.js'
 import { frameHTML } from './markup.js'
 import { FlowController } from './flow.js'
-import { exportPNG, recordGIF } from './exporter.js'
+import { exportPNG, recordGIF, recordMP4 } from './exporter.js'
 
 /**
  * Render a diagram spec.
@@ -42,6 +42,7 @@ export function renderDiagram(spec, mount) {
   return {
     exportPNG: (onStatus) => exportPNG(frame, flow, slug, onStatus),
     recordGIF: (onStatus) => recordGIF(frame, flow, slug, onStatus),
+    recordMP4: (onStatus) => recordMP4(frame, flow, slug, onStatus),
     dispose() {
       window.removeEventListener('resize', fitPreview)
       flow.dispose()

@@ -31,6 +31,7 @@
   "dependencies": {
     "gif.js": "^0.2.0",
     "html2canvas": "^1.4.1",
+    "mp4-muxer": "^5.2.2",
     "simple-icons": "^13.21.0"
   },
   "devDependencies": {

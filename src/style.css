@@ -44,8 +44,10 @@ body {
 }
 .toolbar button:hover { background: #ff7d33; }
 .toolbar button:disabled { opacity: 0.5; cursor: default; }
-#pngBtn { background: transparent; color: var(--orange); }
-#pngBtn:hover { background: rgba(255, 106, 26, 0.1); }
+/* MP4 is the recommended export (animates on LinkedIn) → primary filled.
+   GIF + PNG are secondary outline buttons. */
+#gifBtn, #pngBtn { background: transparent; color: var(--orange); }
+#gifBtn:hover, #pngBtn:hover { background: rgba(255, 106, 26, 0.1); }
 #status { font-size: 13px; color: var(--muted); min-width: 140px; }
 
 /* ---------- responsive preview wrapper ---------- */

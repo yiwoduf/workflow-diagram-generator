@@ -149,14 +149,17 @@ To add a brand logo (use one not already registered):
 
 ## Export behavior (already wired)
 
-- **Download PNG** → `<slug>.png`, full 1500×1500.
-- **Record GIF** → `<slug>.gif`, seamless 30-frame loop of the flow dots,
-  downscaled to `GIF_SIZE` (default 900) to keep the file small. The GIF
-  pipeline captures the static frame once and composes dots natively per frame
-  — only `dots` wires animate. CSS animations do NOT appear in exports
-  (html2canvas renders static styles), so anything that must move in the GIF
-  needs a `dots` wire.
-- GIF size knobs live in `src/engine/constants.js`: `GIF_SIZE` (resolution —
-  the biggest lever, file size scales with its square), `GIF_FRAMES` (smoothness
-  vs size), `GIF_QUALITY`. For extra-small output, post-process offline with
-  `gifsicle -O3 --lossy` or export to WebM/MP4 instead.
+- **Download PNG** → `<slug>.png`, full 1500×1500. Best static format.
+- **Record MP4** → `<slug>.mp4`, H.264, `MP4_SIZE` (1080), `MP4_LOOPS` seamless
+  cycles. Recommended for LinkedIn/social: it animates (LinkedIn flattens GIFs)
+  and is ~5–10× smaller than the GIF. Needs a Chromium browser (WebCodecs); the
+  button auto-hides otherwise.
+- **Record GIF** → `<slug>.gif`, seamless loop downscaled to `GIF_SIZE` (800).
+  Convenient for inline/Slack previews but large.
+- All three share one capture: the static frame is captured once and animation
+  frames are composed natively — only `dots` wires animate. CSS animations do
+  NOT appear in exports (html2canvas renders static styles), so anything that
+  must move needs a `dots` wire.
+- Size knobs live in `src/engine/constants.js`: `MP4_SIZE`/`MP4_BITRATE`/
+  `MP4_FPS`/`MP4_LOOPS`, and `GIF_SIZE`/`GIF_FRAMES`/`GIF_QUALITY` (GIF size
+  scales with the square of `GIF_SIZE`).

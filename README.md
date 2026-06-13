@@ -29,7 +29,8 @@ This project is that wrapper. You chat with an AI coding assistant (e.g. Claude 
 - **Design system out of the box** — dark theme, numbered step badges, phase zones, brand-colored cards, filled arrowheads, wire legend
 - **Real brand logos** — [simple-icons](https://github.com/simple-icons/simple-icons) registry (3,000+ brands) plus custom multi-color SVG support with automatic id scoping
 - **Animated flow** — dots travel along SVG wire paths via `requestAnimationFrame`
-- **Fast exports** — the static frame is captured once with html2canvas, then GIF frames are composed natively on canvas (~30× faster than per-frame DOM capture); 30-frame seamless loop
+- **Three export formats** — full-res PNG, optimized GIF, and a frame-accurate H.264 **MP4** (WebCodecs) that's tiny and animates on LinkedIn
+- **Fast exports** — the static frame is captured once with html2canvas, then animation frames are composed natively on canvas (~30× faster than per-frame DOM capture); seamless loop
 - **Headless verification** — `npm run shot` screenshots any diagram for the AI's self-review loop
 
 ## Quick start
@@ -39,7 +40,17 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-Pick a diagram from the dropdown, then **⬇ Download PNG** or **● Record GIF**.
+Pick a diagram from the dropdown, then **▶ Record MP4**, **● Record GIF**, or **⬇ Download PNG**.
+
+### Posting to LinkedIn / social
+
+| Goal | Format | Size | Notes |
+| --- | --- | --- | --- |
+| **Animated post** | **MP4** | 1080² · ~0.7 MB | Best everywhere. LinkedIn flattens uploaded GIFs to a still — upload the MP4 as video so it actually moves. |
+| Static post | PNG | 1500² · ~0.6 MB | LinkedIn displays square images up to 1200px and downscales cleanly, so the crisp 1500² master is ideal. |
+| Quick share (Slack/web) | GIF | 800² · ~3.5 MB | Convenient inline preview; far larger than MP4 for the same content. |
+
+Export sizes are tunable in [`src/engine/constants.js`](src/engine/constants.js) (`MP4_SIZE`, `GIF_SIZE`, frames, bitrate). MP4 export needs a Chromium-based browser (WebCodecs); the button hides automatically otherwise.
 
 ```bash
 # optional: headless screenshot verification (used by the AI authoring loop)
@@ -100,13 +111,13 @@ scripts/
   screenshot.mjs       headless frame screenshot for the verification loop
 ```
 
-**Export pipeline.** html2canvas cannot capture CSS animations, and a 1500×1500 DOM capture costs ~0.5–1s. So the exporter hides the dot layer, captures the static frame **once**, then composes each GIF frame natively (base bitmap + glowing dots sampled along the wire paths at `i/30` phase). One capture instead of thirty — recording a full GIF takes seconds, and the loop is mathematically seamless. PNG exports at full 1500²; the GIF is downscaled to `GIF_SIZE` (default 900) since GIF's 256-color/LZW format makes file size scale with pixel count — all tunable in `src/engine/constants.js`.
+**Export pipeline.** html2canvas cannot capture CSS animations, and a 1500×1500 DOM capture costs ~0.5–1s. So the exporter hides the dot layer, captures the static frame **once**, then composes every animation frame natively (base bitmap + glowing dots sampled along the wire paths at phase `i/N`). One DOM capture per export instead of one per frame — and the loop is mathematically seamless. PNG exports at full 1500²; the GIF is downscaled (`GIF_SIZE`, 256-color/LZW makes its size scale with pixel count); the MP4 is encoded frame-by-frame with the WebCodecs `VideoEncoder` (H.264) and muxed in-memory — high quality at a fraction of the GIF's bytes.
 
 **Your own diagrams stay local.** `diagrams/*.js` is gitignored except the two bundled examples, so specs you author aren't committed unless you opt in by whitelisting them in `.gitignore`.
 
 ## Tech
 
-Vanilla JS + [Vite](https://vitejs.dev) · [html2canvas](https://html2canvas.hertzen.com) · [gif.js](https://jnordberg.github.io/gif.js/) · [simple-icons](https://simpleicons.org) · [Playwright](https://playwright.dev) (verification)
+Vanilla JS + [Vite](https://vitejs.dev) · [html2canvas](https://html2canvas.hertzen.com) · [gif.js](https://jnordberg.github.io/gif.js/) · [WebCodecs](https://developer.mozilla.org/docs/Web/API/WebCodecs_API) + [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) · [simple-icons](https://simpleicons.org) · [Playwright](https://playwright.dev) (verification)
 
 No framework, no backend — everything runs client-side.
 

@@ -1,5 +1,6 @@
 import './style.css'
 import { renderDiagram } from './engine/render.js'
+import { canExportMP4 } from './engine/exporter.js'
 
 // Every spec in /diagrams is auto-discovered — drop a file there and it shows
 // up in the selector. (Subfolders like _archive/ are intentionally excluded.)
@@ -18,6 +19,7 @@ app.innerHTML = `
         ${diagrams.map((d) => `<option value="${d.id}">${d.id}</option>`).join('')}
       </select>
       <span class="toolbar-spacer"></span>
+      ${canExportMP4() ? '<button id="mp4Btn" title="Best for LinkedIn / video feeds">▶ Record MP4</button>' : ''}
       <button id="gifBtn">● Record GIF</button>
       <button id="pngBtn">⬇ Download PNG</button>
       <span id="status" role="status"></span>
@@ -30,6 +32,8 @@ const stage = document.getElementById('stage')
 const statusEl = document.getElementById('status')
 const pngBtn = document.getElementById('pngBtn')
 const gifBtn = document.getElementById('gifBtn')
+const mp4Btn = document.getElementById('mp4Btn') // may be absent (non-Chromium)
+const exportBtns = [pngBtn, gifBtn, mp4Btn].filter(Boolean)
 
 const setStatus = (t) => { statusEl.textContent = t }
 
@@ -59,24 +63,33 @@ async function load(id) {
   }
 }
 
+const EXPORTERS = {
+  png: (d) => d.exportPNG(setStatus),
+  gif: (d) => d.recordGIF(setStatus),
+  mp4: (d) => d.recordMP4(setStatus),
+}
+
 async function runExport(kind) {
   if (!active || exporting) return
   exporting = true
-  pngBtn.disabled = gifBtn.disabled = select.disabled = true
+  exportBtns.forEach((b) => (b.disabled = true))
+  select.disabled = true
   try {
-    await (kind === 'png' ? active.exportPNG(setStatus) : active.recordGIF(setStatus))
+    await EXPORTERS[kind](active)
   } catch (e) {
     setStatus('error: ' + e.message)
     console.error(e)
   } finally {
     exporting = false
-    pngBtn.disabled = gifBtn.disabled = select.disabled = false
+    exportBtns.forEach((b) => (b.disabled = false))
+    select.disabled = false
   }
 }
 
 select.onchange = () => load(select.value)
 pngBtn.onclick = () => runExport('png')
 gifBtn.onclick = () => runExport('gif')
+if (mp4Btn) mp4Btn.onclick = () => runExport('mp4')
 
 const initial =
   new URLSearchParams(window.location.search).get('d') ||

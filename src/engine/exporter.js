@@ -7,7 +7,26 @@
 // sampled phase. This makes GIF recording ~30x faster and frame-perfect.
 import GIF from 'gif.js'
 import html2canvas from 'html2canvas'
-import { SIZE, GIF_SIZE, BG, FLOW_PERIOD, GIF_FRAMES, GIF_QUALITY } from './constants.js'
+import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
+import {
+  SIZE,
+  GIF_SIZE,
+  BG,
+  FLOW_PERIOD,
+  GIF_FRAMES,
+  GIF_QUALITY,
+  MP4_SIZE,
+  MP4_FPS,
+  MP4_LOOPS,
+  MP4_BITRATE,
+} from './constants.js'
+
+const MP4_CODEC = 'avc1.640028' // H.264 High @ 4.0 — broad playback support
+
+/** Whether in-browser H.264 MP4 export is available (Chromium-based browsers). */
+export function canExportMP4() {
+  return typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined'
+}
 
 /** Capture the static diagram (no flow dots) at full resolution. */
 async function captureBase(frame, flow) {
@@ -120,6 +139,64 @@ export async function recordGIF(frame, flow, slug, onStatus) {
       gif.on('abort', settle(() => reject(new Error('GIF encoding aborted'))))
       gif.render()
     })
+  } finally {
+    flow.start()
+  }
+}
+
+/**
+ * Record a seamless-loop H.264 MP4 (MP4_LOOPS full cycles at MP4_FPS).
+ * The best format for LinkedIn/social: it animates where GIFs are flattened,
+ * at a fraction of the size. Requires WebCodecs (see canExportMP4).
+ * @returns {Promise<void>} resolves once the download has been triggered.
+ */
+export async function recordMP4(frame, flow, slug, onStatus) {
+  if (!canExportMP4()) throw new Error('MP4 export needs a Chromium-based browser')
+  onStatus('capturing…')
+  flow.stop()
+  try {
+    const base = await captureBase(frame, flow)
+    const framesPerLoop = Math.round(FLOW_PERIOD * MP4_FPS)
+    const total = framesPerLoop * MP4_LOOPS
+
+    const muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: { codec: 'avc', width: MP4_SIZE, height: MP4_SIZE },
+      fastStart: 'in-memory', // moov atom up front → streams/plays immediately
+    })
+    let encodeError = null
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: (e) => { encodeError = e },
+    })
+    encoder.configure({
+      codec: MP4_CODEC,
+      width: MP4_SIZE,
+      height: MP4_SIZE,
+      bitrate: MP4_BITRATE,
+      framerate: MP4_FPS,
+    })
+
+    const usPerFrame = 1e6 / MP4_FPS
+    for (let i = 0; i < total; i++) {
+      if (encodeError) throw encodeError
+      const phase = (i % framesPerLoop) / framesPerLoop
+      const canvas = composeFrame(base, flow.sample(phase), MP4_SIZE)
+      const vframe = new VideoFrame(canvas, { timestamp: Math.round(i * usPerFrame), duration: Math.round(usPerFrame) })
+      encoder.encode(vframe, { keyFrame: i % MP4_FPS === 0 })
+      vframe.close()
+      // Avoid unbounded encoder backpressure on slower machines.
+      if (encoder.encodeQueueSize > MP4_FPS) await new Promise((r) => setTimeout(r, 0))
+      onStatus(`encoding ${i + 1}/${total}…`)
+    }
+
+    await encoder.flush()
+    encoder.close()
+    if (encodeError) throw encodeError
+    muxer.finalize()
+    const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' })
+    download(URL.createObjectURL(blob), `${slug}.mp4`)
+    onStatus('MP4 saved ✓')
   } finally {
     flow.start()
   }
