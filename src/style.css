@@ -1,0 +1,164 @@
+/* Fonts are loaded via <link> in index.html (no @import — avoids a render-blocking
+   second request and keeps exported SVG/CSS free of external URLs). */
+
+:root {
+  --bg: #0e0e14;
+  --ink: #f4f1ec;
+  --muted: #8a8a99;
+  --card: #181822;
+  --card-border: rgba(255, 255, 255, 0.13);
+  --orange: #ff6a1a;
+  --orange-soft: #ff8c4d;
+  --green: #34d399;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #08080c;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px;
+}
+.page { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+
+/* ---------- toolbar ---------- */
+.toolbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  width: 100%; max-width: 1500px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.toolbar-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.toolbar select {
+  font-family: inherit; font-size: 14px; color: var(--ink);
+  background: #14141c; border: 1px solid var(--card-border); border-radius: 10px;
+  padding: 10px 14px; min-width: 260px; cursor: pointer; outline: none;
+}
+.toolbar select:focus { border-color: var(--orange); }
+.toolbar-spacer { flex: 1; }
+.toolbar button {
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  padding: 11px 20px; border-radius: 10px; cursor: pointer; transition: 0.15s;
+  border: 1px solid var(--orange); background: var(--orange); color: #fff;
+}
+.toolbar button:hover { background: #ff7d33; }
+.toolbar button:disabled { opacity: 0.5; cursor: default; }
+#pngBtn { background: transparent; color: var(--orange); }
+#pngBtn:hover { background: rgba(255, 106, 26, 0.1); }
+#status { font-size: 13px; color: var(--muted); min-width: 140px; }
+
+/* ---------- responsive preview wrapper ---------- */
+.frame-wrap { position: relative; }
+
+/* ---------- square frame 1500x1500 ---------- */
+.frame { width: 1500px; height: 1500px; position: relative; overflow: hidden; background: var(--bg); }
+.bg-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ---------- header ---------- */
+.header { position: absolute; left: 72px; top: 64px; right: 72px; display: flex; align-items: flex-start; justify-content: space-between; z-index: 6; }
+.title-wrap { display: flex; align-items: flex-start; gap: 20px; }
+.title-bar { width: 10px; height: 108px; background: var(--orange); border-radius: 5px; }
+.title { font-size: 58px; font-weight: 700; line-height: 1.05; letter-spacing: -1.6px; }
+.title .hl { background: var(--orange); color: #fff; padding: 0 18px; border-radius: 13px; display: inline-block; }
+.live-pill {
+  display: inline-flex; align-items: center; gap: 11px;
+  background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4); color: var(--green);
+  font-family: 'JetBrains Mono', monospace; font-size: 21px; font-weight: 700;
+  padding: 12px 22px; border-radius: 999px;
+}
+.live-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.subtitle { position: absolute; left: 102px; top: 196px; right: 72px; font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--muted); z-index: 6; }
+
+/* ---------- phase zones ---------- */
+.zone { position: absolute; z-index: 1; border: 1px solid; border-radius: 28px; background: rgba(255, 255, 255, 0.018); }
+.zone-label {
+  position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700; letter-spacing: 2px;
+  background: var(--bg); border: 1px solid; padding: 4px 18px; border-radius: 999px; white-space: nowrap;
+}
+
+/* ---------- orchestrator hub ---------- */
+.hub { position: absolute; z-index: 4; border: 1px solid; border-radius: 24px; display: flex; align-items: center; gap: 26px; padding: 0 36px; }
+.hub-ico { width: 80px; height: 80px; flex: 0 0 80px; border-radius: 20px; border: 1px solid; display: flex; align-items: center; justify-content: center; }
+.hub-text { flex: 1; }
+.hub-name { font-size: 38px; font-weight: 700; letter-spacing: -0.6px; display: flex; align-items: center; gap: 16px; }
+.hub-sub { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--muted); margin-top: 7px; }
+.hub-tags { display: flex; gap: 12px; }
+.tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--muted);
+  border: 1px solid var(--card-border); padding: 8px 17px; border-radius: 11px;
+}
+
+/* ---------- numbered step badges (ByteByteGo-style) ---------- */
+.step-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 700;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.45);
+}
+.card-badge { position: absolute; top: 22px; right: 22px; }
+
+/* ---------- wires + flow dots ---------- */
+.wires { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; }
+.dot-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.dot { position: absolute; width: 13px; height: 13px; border-radius: 50%; }
+
+/* ---------- wire labels ----------
+   Rendered ABOVE node cards (z > card) as opaque chips so a label can never be
+   hidden behind a box, even when a narrow gap forces partial overlap. */
+.wlabel {
+  position: absolute; z-index: 7;
+  font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500;
+  background: var(--bg); border: 1px solid; padding: 4px 13px; border-radius: 999px;
+  transform: translate(-50%, -50%); white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.wlabel.rot { transform: translate(-50%, -50%) rotate(-90deg); }
+
+/* ---------- data-source chips ---------- */
+.chip {
+  position: absolute; z-index: 4;
+  display: inline-flex; align-items: center; gap: 11px;
+  font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--ink);
+  background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 0 18px;
+}
+.chip-ico { color: var(--orange-soft); display: flex; }
+.chip-t { white-space: nowrap; }
+
+/* ---------- node cards ---------- */
+.card {
+  position: absolute; z-index: 5;
+  background: linear-gradient(180deg, #1b1b26, #15151d);
+  border: 1px solid var(--card-border); border-radius: 26px;
+  padding: 30px 26px; display: flex; flex-direction: column; gap: 18px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.42);
+}
+.card-top { position: absolute; top: 0; left: 28px; right: 28px; height: 4px; border-radius: 4px; }
+.card-ico { width: 80px; height: 80px; border-radius: 20px; border: 1px solid; display: flex; align-items: center; justify-content: center; }
+.card-name { font-size: 34px; font-weight: 600; letter-spacing: -0.5px; }
+.card-sub { font-family: 'JetBrains Mono', monospace; font-size: 17px; color: var(--muted); line-height: 1.4; }
+
+/* ---------- legend ---------- */
+.legend {
+  position: absolute; right: 72px; bottom: 104px; z-index: 6;
+  display: flex; gap: 26px; font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--muted);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 10px; }
+
+/* ---------- footer ---------- */
+.footer {
+  position: absolute; left: 72px; bottom: 54px; right: 72px;
+  font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--muted);
+  display: flex; align-items: center; gap: 12px;
+}
+.fn-name { color: var(--ink); font-weight: 700; }
+.fn-sep { color: var(--orange); }
+.fn-brand { margin-left: auto; color: var(--orange-soft); font-weight: 700; }
